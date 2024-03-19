@@ -16,9 +16,10 @@ import (
 
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/shared/mlog"
-	"github.com/mattermost/mattermost/server/public/shared/request"
+
+	//"github.com/mattermost/mattermost/server/public/shared/request"
 	"github.com/mattermost/mattermost/server/v8/channels/jobs"
-	"github.com/mattermost/mattermost/server/v8/channels/store/sqlstore"
+	//"github.com/mattermost/mattermost/server/v8/channels/store/sqlstore"
 	"github.com/mattermost/mattermost/server/v8/channels/utils"
 	"github.com/mattermost/mattermost/server/v8/einterfaces"
 )
@@ -49,7 +50,7 @@ func (ps *PlatformService) License() *model.License {
 }
 
 func (ps *PlatformService) LoadLicense() {
-	c := request.EmptyContext(ps.logger)
+	//c := request.EmptyContext(ps.logger)
 
 	// ENV var overrides all other sources of license.
 	licenseStr := os.Getenv(LicenseEnv)
@@ -80,33 +81,55 @@ func (ps *PlatformService) LoadLicense() {
 		return
 	}
 
-	licenseId := ""
-	props, nErr := ps.Store.System().Get()
-	if nErr == nil {
-		licenseId = props[model.SystemActiveLicenseId]
-	}
+	/*
+		licenseId := ""
+		props, nErr := ps.Store.System().Get()
+		if nErr == nil {
+			licenseId = props[model.SystemActiveLicenseId]
+		}
 
-	if !model.IsValidId(licenseId) {
-		// Lets attempt to load the file from disk since it was missing from the DB
-		license, licenseBytes := utils.GetAndValidateLicenseFileFromDisk(*ps.Config().ServiceSettings.LicenseFileLocation)
+		if !model.IsValidId(licenseId) {
+			// Lets attempt to load the file from disk since it was missing from the DB
+			license, licenseBytes := utils.GetAndValidateLicenseFileFromDisk(*ps.Config().ServiceSettings.LicenseFileLocation)
 
-		if license != nil {
-			if _, err := ps.SaveLicense(licenseBytes); err != nil {
-				ps.logger.Error("Failed to save license key loaded from disk.", mlog.Err(err))
-			} else {
-				licenseId = license.Id
+			if license != nil {
+				if _, err := ps.SaveLicense(licenseBytes); err != nil {
+					ps.logger.Error("Failed to save license key loaded from disk.", mlog.Err(err))
+				} else {
+					licenseId = license.Id
+				}
 			}
 		}
-	}
 
-	record, nErr := ps.Store.License().Get(sqlstore.RequestContextWithMaster(c), licenseId)
-	if nErr != nil {
-		ps.logger.Error("License key from https://mattermost.com required to unlock enterprise features.", mlog.Err(nErr))
-		ps.SetLicense(nil)
-		return
-	}
+		record, nErr := ps.Store.License().Get(sqlstore.RequestContextWithMaster(c), licenseId)
+		if nErr != nil {
+			ps.logger.Error("License key from https://mattermost.com required to unlock enterprise features.", mlog.Err(nErr))
+			ps.SetLicense(nil)
+			return
+		}
 
-	ps.ValidateAndSetLicenseBytes([]byte(record.Bytes))
+		ps.ValidateAndSetLicenseBytes([]byte(record.Bytes))
+	*/
+
+	f := model.Features{}
+	f.SetDefaults()
+	*f.Users = 9999
+	*f.Elasticsearch = false
+
+	ps.SetLicense(&model.License{
+		Id:        model.NewId(),
+		IssuedAt:  0,
+		ExpiresAt: 4102491600000, // 1st january 2100 in ms
+		Customer: &model.Customer{
+			Name:    "Mr Robot",
+			Email:   "mrrobot@fsociety.com",
+			Company: "fsociety",
+		},
+		Features:     &f,
+		SkuName:      "Enterprise",
+		SkuShortName: model.LicenseShortSkuEnterprise,
+	})
+
 	ps.logger.Info("License key valid unlocking enterprise features.")
 }
 
