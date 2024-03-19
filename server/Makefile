@@ -394,7 +394,7 @@ ifneq ($(IGNORE_GO_WORK_IF_EXISTS),true)
 	go work use .
 	go work use ./public
 ifeq ($(BUILD_ENTERPRISE_READY),true)
-	go work use ../../enterprise
+	go work use $(BUILD_ENTERPRISE_DIR)
 endif
 endif
 
