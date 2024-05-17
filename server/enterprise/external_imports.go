@@ -5,6 +5,7 @@
 
 package enterprise
 
+/*
 import (
 	// Needed to ensure the init() method in the EE gets run
 	_ "github.com/mattermost/enterprise/account_migration"
@@ -45,3 +46,4 @@ import (
 	// Needed to ensure the init() method in the EE gets run
 	_ "github.com/mattermost/enterprise/outgoing_oauth_connections"
 )
+*/
