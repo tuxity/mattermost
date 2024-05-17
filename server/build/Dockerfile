@@ -10,6 +10,8 @@ ARG PUID=2000
 ARG PGID=2000
 ARG MM_PACKAGE="https://releases.mattermost.com/9.6.1/mattermost-9.6.1-linux-amd64.tar.gz?src=docker"
 
+COPY --from=dist mattermost-* /tmp
+
 # # Install needed packages and indirect dependencies
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
