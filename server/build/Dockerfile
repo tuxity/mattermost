@@ -13,6 +13,8 @@ ARG PGID=2000
 # i.e. https://releases.mattermost.com/9.7.1/mattermost-9.7.1-linux-amd64.tar.gz
 ARG MM_PACKAGE="https://latest.mattermost.com/mattermost-enterprise-linux"
 
+COPY --from=dist mattermost-* /tmp
+
 # # Install needed packages and indirect dependencies
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
