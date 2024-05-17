@@ -1,0 +1,63 @@
+name: Sync New Releases
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync-new-releases:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compare Releases
+        id: compare_releases
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const upstream = await github.rest.repos.getLatestRelease({
+              owner: 'mattermost',
+              repo: 'mattermost'
+            });
+            core.info(`Upstream release: ${upstream.data.tag_name}`);
+            const fork = await github.rest.repos.getLatestRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            core.info(`Fork release: ${fork.data.tag_name}`);
+
+            if (upstream.data.tag_name !== fork.data.tag_name) {
+              core.setOutput('new_tag', upstream.data.tag_name);
+            }
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        if: steps.compare_releases.outputs.new_tag
+        with:
+          token: ${{ secrets.PAT }}
+          fetch-depth: 0
+
+      - name: Sync Branch & Tag
+        if: steps.compare_releases.outputs.new_tag
+        run: |
+          tag="${{ steps.compare_releases.outputs.new_tag }}"
+          version="${tag:1}"
+          major_minor="${version%.*}"
+          releaseBranch="release-$major_minor"
+
+          git remote add mattermost https://github.com/mattermost/mattermost.git
+          git fetch mattermost ${releaseBranch}
+          git fetch mattermost tag ${tag}
+
+          git checkout -b ${releaseBranch} --track mattermost/${releaseBranch}
+          git reset --hard ${tag}
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          echo $(git rev-parse HEAD~1)
+          git cherry-pick 06625acdaf3cd18898e0d9db1de09ee1479c6988
+
+          git tag ${tag} --force
+
+          git push origin ${releaseBranch} --force
+          git push origin ${tag} --force
