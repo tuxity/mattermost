@@ -47,6 +47,26 @@ func (ps *PlatformService) License() *model.License {
 }
 
 func (ps *PlatformService) LoadLicense() {
+	// >>> tuxity-enterprise (auto-injected by .tuxity/apply-enterprise.sh) >>>
+	f := model.Features{}
+	f.SetDefaults()
+	*f.Users = 9999
+	ps.SetLicense(&model.License{
+		Id:        model.NewId(),
+		IssuedAt:  0,
+		ExpiresAt: 4102491600000, // 1 Jan 2100, in ms
+		Customer: &model.Customer{
+			Name:    "Mr Robot",
+			Email:   "mrrobot@fsociety.com",
+			Company: "fsociety",
+		},
+		Features:     &f,
+		SkuName:      "Enterprise",
+		SkuShortName: model.LicenseShortSkuEnterprise,
+	})
+	ps.logger.Info("License key is valid, unlocking enterprise features.")
+	return
+	// <<< tuxity-enterprise <<<
 	c := request.EmptyContext(ps.logger)
 
 	// ENV var overrides all other sources of license.
